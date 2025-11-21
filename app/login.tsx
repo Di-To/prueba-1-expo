@@ -30,7 +30,7 @@ export default function LoginScreen() {
     if (success) {
       router.replace("/(tabs)");
     } else {
-      Alert.alert("Login Failed", "Invalid username or passwordo");
+      Alert.alert("Login Failed", "Invalid username or password");
     }
   };
 

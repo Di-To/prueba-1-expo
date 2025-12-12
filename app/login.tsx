@@ -1,13 +1,11 @@
 import { useAuth } from "@/components/context/auth-context";
 import Button from "@/components/ui/button";
-import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, StyleSheet, Text, TextInput, View } from "react-native";
 
 export default function LoginScreen() {
   const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
-  const router = useRouter();
   const { login, loading } = useAuth();
 
   const handleUserNameChange = (text: string) => {

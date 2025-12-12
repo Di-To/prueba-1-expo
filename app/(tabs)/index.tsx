@@ -1,62 +1,84 @@
+import { useAuth } from "@/components/context/auth-context";
 import TaskItem from "@/components/task-item";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import NewTask from "@/components/ui/new-task";
 import Title from "@/components/ui/title";
 import { Task } from "@/constants/types";
-import generateRandomId from "@/utils/generate-random-id";
-import { useState } from "react";
-import {
-  FlatList,
-  ListRenderItem,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import getTodoService from "@/services/todo-service";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Alert, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-// Datos iniciales movidos a una constante para limpieza
-const INITIAL_TODOS: Task[] = [
-  { id: generateRandomId(), title: "Comprar víveres", completed: false },
-  { id: generateRandomId(), title: "Pasear al perro", completed: true },
-  { id: generateRandomId(), title: "Leer documentación", completed: false },
-];
-
 export default function HomeScreen() {
-  const [todos, setTodos] = useState<Task[]>(INITIAL_TODOS);
+  const { user } = useAuth();
+  const [todos, setTodos] = useState<Task[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
   const [creatingNew, setCreatingNew] = useState<boolean>(false);
 
-  const createTask = (task: Task) => {
-    if (task.title.trim().length === 0) return;
-    // Agregamos al inicio del array para ver la nueva tarea primero
-    setTodos((prevTodos) => [task, ...prevTodos]);
+  const todoService = useMemo(
+    () => (user ? getTodoService({ token: user.token || "" }) : null),
+    [user]
+  );
+
+  const fetchTodos = useCallback(async () => {
+    if (!user || !todoService) return;
+    setLoading(true);
+    try {
+      const todoService = getTodoService({ token: user.token });
+      const response = await todoService.getTodos();
+      setTodos(response.data);
+    } catch (error) {
+      Alert.alert("Error", (error as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }, [user, todoService]);
+
+  useEffect(() => {
+    if (user) {
+      fetchTodos();
+    }
+  }, [user, fetchTodos]);
+
+  const onTaskCreated = () => {
+    fetchTodos();
     setCreatingNew(false);
   };
 
-  const toggleTodo = (id: string) => {
+  const toggleTodo = async (id: string) => {
+    setLoading(true);
     setTodos((prevTodos) =>
       prevTodos.map((todo) =>
         todo.id === id ? { ...todo, completed: !todo.completed } : todo
       )
     );
+    const updatedTodo = todos.find((todo) => todo.id === id);
+    if (todoService && updatedTodo !== undefined) {
+      updatedTodo.completed = !updatedTodo.completed;
+      try {
+        await todoService.updateTodo(updatedTodo);
+        await fetchTodos();
+      } catch (error) {
+        Alert.alert("Error", (error as Error).message);
+      }
+      setLoading(false);
+    }
   };
 
-  const removeTodo = (id: string) => {
-    setTodos((prevTodos) => prevTodos.filter((todo) => todo.id !== id));
+  const removeTodo = async (id: string) => {
+    setLoading(true);
+    await todoService?.deleteTodo(id);
+    await fetchTodos();
   };
 
-  // Renderizado optimizado para FlatList
-  const renderItem: ListRenderItem<Task> = ({ item }) => (
-    <TaskItem task={item} onToggle={toggleTodo} onRemove={removeTodo} />
-  );
+  const handleNewTaskClose = () => {
+    setCreatingNew(false);
+  };
 
   if (creatingNew) {
     return (
       <SafeAreaView style={styles.container}>
-        <NewTask
-          onClose={() => setCreatingNew(false)}
-          onTaskSave={createTask}
-        />
+        <NewTask onClose={handleNewTaskClose} onTaskCreated={onTaskCreated} />
       </SafeAreaView>
     );
   }
@@ -65,25 +87,22 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.headerContainer}>
         <Title>Mis Tareas</Title>
-        <Text style={styles.subTitle}>
-          {todos.filter((t) => !t.completed).length} pendientes
-        </Text>
-      </View>
-
-      <FlatList
-        data={todos}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={() => (
-          <View style={styles.emptyState}>
-            <IconSymbol name="tray" size={48} color="#ccc" />
-            <Text style={styles.emptyText}>No hay tareas pendientes</Text>
-            <Text style={styles.emptySubText}>¡Tómate un descanso!</Text>
+        {loading && (
+          <View>
+            <Title>Cargando...</Title>
           </View>
         )}
-      />
+
+        {todos.map((task) => (
+          <TaskItem
+            key={task.id}
+            task={task}
+            onToggle={toggleTodo}
+            onRemove={removeTodo}
+            loading={loading}
+          />
+        ))}
+      </View>
 
       <TouchableOpacity
         style={styles.fab}

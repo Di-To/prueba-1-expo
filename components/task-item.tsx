@@ -6,6 +6,7 @@ interface TaskItemProps {
   task: Task;
   onToggle: (id: string) => void;
   onRemove: (id: string) => void;
+  loading?: boolean;
 }
 export default function TaskItem({ task, onToggle, onRemove }: TaskItemProps) {
   return (
@@ -23,9 +24,9 @@ export default function TaskItem({ task, onToggle, onRemove }: TaskItemProps) {
           />
         )}
       </View>
-      {task.coordinates && (
+      {task.location && (
         <Text style={{ fontSize: 10, color: "gray" }}>
-          📍 Lat: {task.coordinates.latitude}, Lon: {task.coordinates.longitude}
+          📍 Lat: {task.location.latitude}, Lon: {task.location.longitude}
         </Text>
       )}
       <Text style={[styles.title, task.completed && styles.completedTitle]}>

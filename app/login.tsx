@@ -1,20 +1,14 @@
 import { useAuth } from "@/components/context/auth-context";
+import Button from "@/components/ui/button";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import {
-  Alert,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Alert, StyleSheet, Text, TextInput, View } from "react-native";
 
 export default function LoginScreen() {
   const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, loading } = useAuth();
 
   const handleUserNameChange = (text: string) => {
     setUserName(text);
@@ -25,12 +19,11 @@ export default function LoginScreen() {
   };
 
   const handleLogin = () => {
-    const success = login(userName, password);
-
-    if (success) {
-      router.replace("/(tabs)");
-    } else {
-      Alert.alert("Login Failed", "Invalid username or password");
+    try {
+      login(userName, password);
+    } catch (error) {
+      Alert.alert("Login Failed", (error as Error).message);
+      return;
     }
   };
 
@@ -38,9 +31,9 @@ export default function LoginScreen() {
     <View style={styles.container}>
       <Text>Login Screen</Text>
       <View style={styles.inpuContainer}>
-        <Text style={styles.label}>Username:</Text>
+        <Text style={styles.label}>Email:</Text>
         <TextInput
-          placeholder="Username"
+          placeholder="Email"
           style={styles.inputStyle}
           onChangeText={handleUserNameChange}
         />
@@ -54,9 +47,13 @@ export default function LoginScreen() {
           onChangeText={handlePasswordChange}
         />
       </View>
-      <Pressable style={styles.button} onPress={handleLogin}>
-        <Text>Login</Text>
-      </Pressable>
+      <Button
+        style={styles.button}
+        onPress={handleLogin}
+        disabled={!userName || !password}
+        loading={loading}
+        text="Login"
+      />
     </View>
   );
 }

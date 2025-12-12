@@ -1,20 +1,31 @@
-import React, { createContext, useContext, useState } from "react";
+import getAuthService from "@/services/auth-service";
+import {
+  clearSessionFromStorage,
+  loadSessionFromStorage,
+  saveSessionToStorage,
+} from "@/utils/storage";
+import { router } from "expo-router";
+import { decodeJwt } from "jose";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { Alert } from "react-native";
 
-interface User {
+export interface User {
   id: string;
-  name: string;
+  email: string;
+  token: string;
 }
 
-interface AuthContextProps {
+export interface JwtPayload {
+  sub: string;
+  email: string;
+}
+
+export interface AuthContextProps {
   user: User | null;
-  login: (username: string, password: string) => boolean;
+  login: (username: string, password: string) => void;
   logout: () => void;
+  loading: boolean;
 }
-
-const EXPECTED_USERS = [
-  { id: "1", name: "User", password: "1234" },
-  { id: "2", name: "Admin", password: "admin" },
-];
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
@@ -24,28 +35,57 @@ export default function AuthProvider({
   children: React.ReactNode;
 }) {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const login = (username: string, password: string) => {
-    const foundUser = EXPECTED_USERS.find(
-      (u) => u.name === username && u.password === password
-    );
+  useEffect(() => {
+    loadSessionFromStorage().then((loadedUser) => {
+      if (loadedUser) {
+        setUser(loadedUser);
+      }
+    });
+  }, []);
 
-    if (foundUser) {
-      setUser({ id: foundUser.id, name: foundUser.name });
-      return true;
-    } else {
-      //   Alert.alert("Invalid username or password");
-      return false;
+  useEffect(() => {
+    if (user) {
+      router.replace("/(tabs)");
+    }
+  }, [user]);
+
+  const login = async (username: string, password: string) => {
+    const authClient = getAuthService();
+    setLoading(true);
+
+    try {
+      const loginResponse = await authClient.login({
+        email: username,
+        password,
+      });
+      const token = loginResponse.data.token;
+      const decodedToken = decodeJwt<JwtPayload>(token);
+
+      const loggedInUser: User = {
+        id: decodedToken.sub,
+        email: decodedToken.email,
+        token: token,
+      };
+
+      setUser(loggedInUser);
+      await saveSessionToStorage(loggedInUser);
+    } catch (error) {
+      Alert.alert("Login Failed", (error as Error).message);
+    } finally {
+      setLoading(false);
     }
   };
 
   const logout = () => {
     setUser(null);
+    clearSessionFromStorage();
   };
 
   // ✅ Return the provider itself here
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

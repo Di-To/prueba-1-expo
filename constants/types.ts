@@ -2,9 +2,10 @@ export interface Task {
   id: string;
   title: string;
   completed: boolean;
-  coordinates?: {
-    latitude: string;
-    longitude: string;
+  userId: string;
+  location?: {
+    latitude: number;
+    longitude: number;
   };
   photoUri?: string;
 }

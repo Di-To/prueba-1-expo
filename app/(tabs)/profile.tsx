@@ -12,7 +12,7 @@ export default function ProfielScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.headerText}>Hola {user?.name}</Text>
+      <Text style={styles.headerText}>Hola {user?.email || "User"}</Text>
 
       <Pressable style={styles.button} onPress={handleLogout}>
         <Text>Logout</Text>

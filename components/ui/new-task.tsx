@@ -1,4 +1,5 @@
 import { Task } from "@/constants/types";
+import getTodoService from "@/services/todo-service";
 import {
   launchCameraAsync,
   requestCameraPermissionsAsync,
@@ -10,19 +11,21 @@ import {
 } from "expo-location";
 import { useState } from "react";
 import { Alert, Image, StyleSheet, Text, TextInput, View } from "react-native";
+import { useAuth } from "../context/auth-context";
 import Button from "./button";
 import Title from "./title";
 
 interface NewTaskProps {
   onClose: () => void;
-  onTaskSave: (task: Task) => void;
+  onTaskCreated: () => void;
 }
 
-export default function NewTask({ onClose, onTaskSave }: NewTaskProps) {
+export default function NewTask({ onClose, onTaskCreated }: NewTaskProps) {
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [taskTitle, setTaskTitle] = useState<string>("");
   const [isCapturingPhoto, setIsCapturingPhoto] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const { user } = useAuth();
 
   async function handleTakePhoto() {
     if (isCapturingPhoto) return;
@@ -49,6 +52,9 @@ export default function NewTask({ onClose, onTaskSave }: NewTaskProps) {
       });
 
       if (!result.canceled && result.assets.length > 0) {
+        const photoAsBlob = await fetch(result.assets[0].uri).then((res) =>
+          res.blob()
+        );
         setPhotoUri(result.assets[0].uri);
       }
     } catch (error) {
@@ -75,8 +81,8 @@ export default function NewTask({ onClose, onTaskSave }: NewTaskProps) {
             accuracy: Accuracy.Balanced,
           });
           location = {
-            latitude: locationResult.coords.latitude.toFixed(6).toString(),
-            longitude: locationResult.coords.longitude.toFixed(6).toString(),
+            latitude: Number(locationResult.coords.latitude.toFixed(6)),
+            longitude: Number(locationResult.coords.longitude.toFixed(6)),
           };
         }
       } catch (locationError) {
@@ -88,12 +94,12 @@ export default function NewTask({ onClose, onTaskSave }: NewTaskProps) {
         title: taskTitle,
         completed: false,
         photoUri: photoUri || undefined,
-        coordinates: location || {
-          latitude: "7.113000",
-          longitude: "-73.119800",
-        },
+        location: location || undefined,
+        userId: user ? user.id : "guest",
       };
-      onTaskSave(newTask);
+      const todoService = getTodoService({ token: user!.token });
+      await todoService.createTodo(newTask);
+      onTaskCreated();
     } catch (error) {
       console.error("Error saving task:", error);
       Alert.alert(

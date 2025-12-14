@@ -1,82 +1,81 @@
 # TaskFlow Mobile App
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)
 ![React Native](https://img.shields.io/badge/React_Native-v0.72-61DAFB.svg)
 ![Expo](https://img.shields.io/badge/Expo-Router-black.svg)
 
-Aplicación móvil para la gestión de tareas personales, desarrollada con React Native y Expo Router. Este proyecto implementa un flujo de autenticación seguro mediante Context API y una interfaz optimizada para la productividad del usuario.
+Aplicación móvil integral para la gestión de tareas personales. Este proyecto ha evolucionado desde un prototipo local hacia una arquitectura de software robusta, integrando autenticación vía API REST, manejo de sesiones con JWT y mejoras significativas en la experiencia de usuario (UX).
 
 ## 📱 Características Principales
 
 ### Autenticación y Seguridad
 
-- **Login Seguro:** Validación de credenciales contra base de usuarios estática.
-- **Persistencia de Sesión:** Gestión de estado global mediante `AuthContext`.
-- **Rutas Protegidas:** Sistema de navegación condicional que impide el acceso no autorizado a las vistas principales (`/(tabs)`).
+- **Integración API REST:** Comunicación asíncrona mediante `Axios` para Login y Registro.
+- **Seguridad JWT:** Decodificación y manejo de tokens JSON Web Tokens para sesiones de usuario.
+- **Persistencia Segura:** Almacenamiento de sesión utilizando `AsyncStorage` (adaptable a SecureStore).
+- **Rutas Protegidas:** Sistema de navegación condicional que restringe el acceso a `/(tabs)` solo a usuarios autenticados.
 
-### Gestión de Tareas (Core)
+### Gestión de Tareas (Core & UX)
 
-- **Listado Optimizado:** Implementación de `FlatList` para renderizado eficiente de tareas.
-- **CRUD Interactivo:** Creación, marcado (completado) y eliminación de tareas en tiempo real.
-- **UX Mejorada:** Feedback visual inmediato y manejo de estados vacíos (Empty States).
+- **CRUD Completo:** Sincronización de tareas con backend remoto.
+- **Safety Guard (UX):** Implementación de alertas nativas de confirmación antes de eliminar tareas críticas, previniendo acciones accidentales.
+- **Feedback Visual:** Indicadores de carga y estados de operación.
 
 ## 🛠️ Stack Tecnológico
 
 - **Framework:** React Native (Expo SDK 49+)
-- **Navegación:** Expo Router v2 (File-based routing)
+- **Navegación:** Expo Router v2
+- **Cliente HTTP:** Axios
+- **Seguridad:** Jose (JWT Decoding)
+- **Estado:** React Context API + Custom Hooks
 - **Lenguaje:** TypeScript
-- **Estado:** React Context API
-- **UI:** StyleSheet nativo con diseño responsivo
 
-## 📂 Estructura del Proyecto
+## 📂 Arquitectura del Proyecto
 
-La arquitectura sigue las convenciones de Expo Router:
+El proyecto sigue una arquitectura modular escalable:
 
 ```text
 app/
-├── login.tsx          # Entry point de autenticación (Logica + UI)
-├── _layout.tsx        # Root Layout con Auth Provider
-├── (tabs)/            # Grupo de rutas protegidas
-│   ├── index.tsx      # Dashboard principal (Lista de Tareas)
-│   └── explore.tsx    # Vista secundaria
+├── (tabs)/            # Vistas principales protegidas (Home, Profile)
+├── login.tsx          # Pantalla de Autenticación
+├── _layout.tsx        # Configuración de Navegación y Contexto
 components/
-├── ui/                # Componentes de presentación reutilizables
-└── context/           # Lógica de negocio (AuthContext)
+├── context/           # AuthContext (Estado Global)
+├── ui/                # Componentes Reutilizables (Botones, Items)
+services/              # Capa de Comunicación con API
+│   ├── auth-service.ts
+│   └── todo-service.ts
+utils/                 # Utilidades (Storage, Helpers)
+constants/             # Configuración (API URL, Tipos)
+
+Instalación y Ejecución
+Clonar el repositorio:
+
+Bash
+
+git clone https://github.com/Di-To/prueba-1-expo
+cd prueba-1-expo
+
+Instalar dependencias:
+
+Bash
+
+npm install
+
+Ejecutar la aplicación:
+
+Bash
+
+npx expo start
+
+🤝 Colaboradores
+Desarrollado en equipo para la asignatura de Desarrollo Móvil:
+
+Diego Toledo
+
+Mario Díaz
+
+Javier Vidal
+
+Proyecto académico - 2025
 ```
-
-## 🚀 Instalación y Ejecución
-
-1.  **Clonar el repositorio:**
-
-    ```bash
-    git clone <URL_DEL_REPO>
-    cd taskflow-mobile
-    ```
-
-2.  **Instalar dependencias:**
-
-    ```bash
-    npm install
-
-    ```
-
-3.  **Ejecutar la aplicación:**
-
-    ```bash
-    npx expo start
-    ```
-
-## 👤 Credenciales de Prueba
-
-Para acceder a la aplicación en modo desarrollo, utilice los siguientes usuarios pre-configurados:
-
-| Usuario   | Contraseña | Rol           |
-| :-------- | :--------- | :------------ |
-| **User**  | `1234`     | Estándar      |
-| **Admin** | `admin`    | Administrador |
-
-## 🤝 Colaboradores
-
-- **[Diego Toledo, Mario Díaz, Javier Vidal]:** Arquitectura base, configuración de Expo Router y lógica de Contexto. Refactorización de UI/UX en Dashboard, optimización de listas (FlatList) y documentación técnica.
-
----

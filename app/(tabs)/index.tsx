@@ -65,11 +65,31 @@ export default function HomeScreen() {
     }
   };
 
+  // --- MODIFICACIÓN: Alerta de seguridad al borrar ---
   const removeTodo = async (id: string) => {
-    setLoading(true);
-    await todoService?.deleteTodo(id);
-    await fetchTodos();
+    Alert.alert(
+      "Eliminar Tarea", // Título
+      "¿Estás seguro de que deseas eliminar esta tarea?", // Mensaje
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+          // Si cancela, no hacemos nada
+        },
+        {
+          text: "Eliminar",
+          style: "destructive", // Estilo rojo en iOS
+          onPress: async () => {
+            // Solo si presiona "Eliminar" ejecutamos la lógica original
+            setLoading(true);
+            await todoService?.deleteTodo(id);
+            await fetchTodos();
+          },
+        },
+      ]
+    );
   };
+  // --------------------------------------------------
 
   const handleNewTaskClose = () => {
     setCreatingNew(false);
@@ -93,6 +113,7 @@ export default function HomeScreen() {
           </View>
         )}
 
+        {/*  */}
         {todos.map((task) => (
           <TaskItem
             key={task.id}
@@ -118,7 +139,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5", // Fondo gris suave para mejor contraste
+    backgroundColor: "#f5f5f5",
   },
   headerContainer: {
     paddingHorizontal: 20,
@@ -132,7 +153,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: 20,
-    paddingBottom: 100, // Espacio para que el botón flotante no tape el último item
+    paddingBottom: 100,
   },
   emptyState: {
     alignItems: "center",
@@ -161,7 +182,6 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     justifyContent: "center",
     alignItems: "center",
-    // Sombras para iOS
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -169,7 +189,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.3,
     shadowRadius: 4.65,
-    // Sombras para Android
     elevation: 8,
   },
 });

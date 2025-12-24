@@ -1,4 +1,5 @@
 import { Task } from "@/constants/types";
+import getImageUploadService from "@/services/image-upload-service";
 import getTodoService from "@/services/todo-service";
 import {
   launchCameraAsync,
@@ -52,10 +53,16 @@ export default function NewTask({ onClose, onTaskCreated }: NewTaskProps) {
       });
 
       if (!result.canceled && result.assets.length > 0) {
-        // const photoAsBlob = await fetch(result.assets[0].uri).then((res) =>
-        // res.blob()
-        // );
-        setPhotoUri(result.assets[0].uri);
+        const uploadService = getImageUploadService({ token: user!.token });
+        const formData = new FormData();
+        formData.append("image", {
+          uri: result.assets[0].uri,
+          name: "photo.jpg",
+          type: "image/jpeg",
+        } as any);
+
+        const remoteUrl = await uploadService.uploadImage(formData);
+        setPhotoUri(remoteUrl);
       }
     } catch (error) {
       console.error("Error taking photo:", error);

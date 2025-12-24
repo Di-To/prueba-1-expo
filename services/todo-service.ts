@@ -8,6 +8,20 @@ export interface GetTodosResponse {
   count: number;
 }
 
+function handleServiceError(error: unknown, defaultMessage: string) {
+  if (isAxiosError(error) && error.response) {
+    if (error.response.status === 401) {
+      throw new Error(
+        " Credenciales inválidas. Por favor, inicia sesión de nuevo."
+      );
+    }
+  }
+  console.error(defaultMessage, error);
+  throw new Error(
+    " Ocurrió un error al conectar con el servidor. Intenta más tarde."
+  );
+}
+
 export default function getTodoService({ token }: { token: string }) {
   const client = axios.create({
     baseURL: `${API_URL}/todos`,
